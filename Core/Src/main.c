@@ -93,6 +93,9 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
+	MX_ADC1_Init();
+	MX_ADC_DMA_Init();
+	MX_ADC_GPIO_Init();
   chassis_init();
   
   /* USER CODE END 2 */

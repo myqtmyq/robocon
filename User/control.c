@@ -21,6 +21,7 @@ PidTypeDef ANGLE_Z_PID;
 extern TIM_HandleTypeDef 	htim7; 
 extern TIM_HandleTypeDef 	htim3; 
 extern UART_HandleTypeDef huart3;
+extern ADC_HandleTypeDef hadc1;
 extern  uint8_t receive_buff3[7];
 extern hostTypeDef host;
 extern unsigned char gray[12];
@@ -67,6 +68,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         ANGLE_Z_PID.fdb=-detect_line();
 			
         mode=host.mode;
+		//mode=;
         if(mode==DISARM)                 // 模式为0 ，停止模式，锁定
         {
             MotorMove(0, 0, 0);
@@ -86,6 +88,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
             else if((mode==GRAY_MODE)||detect)   // 如果模式为3 或者detect==3 灰度巡线模式
             {
+				/*
                 if(d_time==0)d_time=1,detect=1;
                 if ((sul>2||sur>2) && d_time>200)    // 判断循线停止条件
                 {
@@ -120,6 +123,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                     d_time++;
                     z_time--;
                 }
+				*/
             }
             else if (mode == TURN_LEFT_MODE || turn_left_flag)
             {
