@@ -87,8 +87,8 @@ void MotorMove(int x, int r, int y)
 {
 	MotorPwmSet1(MotorLimit(x - r + y));
     MotorPwmSet2(MotorLimit(x - r - y));
-	MotorPwmSet3(MotorLimit(x + r + y)*1.4);
-    MotorPwmSet4(MotorLimit(x + r - y)*1.4);
+	MotorPwmSet3(MotorLimit(x + r + y));
+    MotorPwmSet4(MotorLimit(x + r - y));
 }
 
 int MotorLimit(int l)

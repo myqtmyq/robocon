@@ -14,8 +14,10 @@
 
 lock_t lock_tt;
 
+
 mode_t control_mode;  
 
+void RunVehicle(int speed);
 
 PidTypeDef ANGLE_Z_PID;
 extern TIM_HandleTypeDef 	htim7; 
@@ -32,11 +34,15 @@ unsigned char OverMess[4]="over";
 
 
 extern uint8_t gray[12];
+extern uint32_t adcValue[3];
+
+#define Is_black(x) adcValue[x]>=2000
 
 int16_t my_delay_time = 0;
 uint8_t my_over = 0;
 uint8_t turn_left_flag = 0;
 uint8_t turn_right_flag = 0;
+int16_t error,lasterror;
 
 
 /*底盘初始化*/
@@ -124,9 +130,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                     z_time--;
                 }
 				*/
+				RunVehicle(800);
             }
             else if (mode == TURN_LEFT_MODE || turn_left_flag)
             {
+							/*
                 my_delay_time++;
                 if (my_delay_time >= 200)
                 {
@@ -141,8 +149,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                     }
                 }
                 else
+				*/
+							
+				if(Is_black(1)){
+					//printf("Hello");
+					my_delay_time++;
+					MotorMove(0, 50, 0);
+									
+					if(detect&&my_delay_time>10)
+					printf("c"),detect=0,my_delay_time=0;
+				}
+				else
                 {
-                    turn_left_flag = 1;
+                    //turn_left_flag = 1;
                     MotorMove(0, 300, 0);
                 }
             }
@@ -183,6 +202,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 
+//800 0.915 8.0
+//300 0.35 4.5
+void RunVehicle(int speed){
+	double p=(0.00113)*speed+0.011,d=(0.007)*speed+2.4;
+	int16_t kp=adcValue[0]-adcValue[1]-250;
+	//printf("%d,%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2],kp); // 打印结果
+	error=kp;
+	int16_t kd=error-lasterror;
+	int16_t pidvalue=p*kp+d*kd;
+	MotorMove(speed,-pidvalue,0);
+	lasterror=error;
+}
 
 
 

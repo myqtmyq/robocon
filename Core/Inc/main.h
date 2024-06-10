@@ -43,6 +43,8 @@ extern "C" {
 #include "hostpc.h"
 #include "control.h"
 #include "PCF8591.h"
+#include "adc.h"
+#include "gray.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
