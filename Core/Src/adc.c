@@ -98,10 +98,10 @@ void MX_ADC_DMA_Init(void)
     Error_Handler();
   }
 
-  //__HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
+  __HAL_LINKDMA(&hadc1, DMA_Handle, hdma_adc1);
 
-  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  //HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  //HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
   
   if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*)adcValue, 3) != HAL_OK) {
     Error_Handler();

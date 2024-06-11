@@ -261,7 +261,7 @@ void PCF8591T_DATE_NUM(uint8_t front[])
 	for(int i=0;i<8;i++) sum+=A_front[i];
 	send[9]=sum;
 	//HAL_UART_Transmit(&huart3,send,11,5);      
-	printf("%d %d %d %d %d %d %d %d\r\n",A_front[0],A_front[1],A_front[2],A_front[3],A_front[4],A_front[5],A_front[6],A_front[7]);
+	//printf("%d %d %d %d %d %d %d %d\r\n",A_front[0],A_front[1],A_front[2],A_front[3],A_front[4],A_front[5],A_front[6],A_front[7]);
 	//printf("x1=%d x2=%d x3=%d x4=%d x5=%d x6=%d x7=%d x8=%d \r\n",front[0],front[1],front[2],front[3],front[4],front[5],front[6],front[7]);   
 }
 

@@ -36,7 +36,7 @@ unsigned char OverMess[4]="over";
 extern uint8_t gray[12];
 extern uint32_t adcValue[3];
 
-#define Is_black(x) adcValue[x]>=2000
+#define Is_black(x) adcValue[x]>=1700
 
 int16_t my_delay_time = 0;
 uint8_t my_over = 0;
@@ -70,11 +70,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim==(&htim7))
     {
-        ANGLE_Z_PID.set=0;
-        ANGLE_Z_PID.fdb=-detect_line();
-			
-        mode=host.mode;
-		//mode=;
+        //mode=host.mode;
+		mode=TURN_LEFT_MODE;
         if(mode==DISARM)                 // 模式为0 ，停止模式，锁定
         {
             MotorMove(0, 0, 0);
@@ -131,6 +128,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 }
 				*/
 				RunVehicle(800);
+				//MotorMove(0, 0, 0);
             }
             else if (mode == TURN_LEFT_MODE || turn_left_flag)
             {
@@ -150,19 +148,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 }
                 else
 				*/
-							
-				if(Is_black(1)){
+				//my_delay_time=0; 
+//				while(my_delay_time<1000)
+//                    MotorMove(0, 500, 0),my_delay_time++;
+				my_delay_time=0;
+				//printf("%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2]);
+				if(Is_black(2)){
 					//printf("Hello");
 					my_delay_time++;
 					MotorMove(0, 50, 0);
 									
-					if(detect&&my_delay_time>10)
-					printf("c"),detect=0,my_delay_time=0;
+//					if(my_delay_time>10)
+//						printf("c"),detect=0,my_delay_time=0;
+					printf("C"); 
 				}
 				else
                 {
                     //turn_left_flag = 1;
-                    MotorMove(0, 300, 0);
+                    MotorMove(0, 800, 0);
                 }
             }
             else if (mode == TURN_RIGHT_MODE || turn_right_flag)
@@ -205,14 +208,15 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //800 0.915 8.0
 //300 0.35 4.5
 void RunVehicle(int speed){
-	double p=(0.00113)*speed+0.011,d=(0.007)*speed+2.4;
+	//double p=(0.00127f)*speed-0.095f,d=(0.0017f)*speed;
+	double p=0.9,d=2.375;
 	int16_t kp=adcValue[0]-adcValue[1]-250;
-	//printf("%d,%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2],kp); // 打印结果
 	error=kp;
 	int16_t kd=error-lasterror;
 	int16_t pidvalue=p*kp+d*kd;
 	MotorMove(speed,-pidvalue,0);
 	lasterror=error;
+	//printf("%d,%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2],pidvalue); // 打印结果
 }
 
 
