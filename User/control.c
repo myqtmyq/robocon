@@ -156,11 +156,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 				if(Is_black(2)){
 					//printf("Hello");
 					my_delay_time++;
-					MotorMove(0, 50, 0);
+					//MotorMove(0, 50, 0);
 									
 //					if(my_delay_time>10)
 //						printf("c"),detect=0,my_delay_time=0;
 					printf("C"); 
+					while(Is_black(1));	
 				}
 				else
                 {

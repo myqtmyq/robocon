@@ -21,44 +21,59 @@
 #include "dma.h"
 #include "tim.h"
 #include "usart.h"
-#include "adc.h"
 #include "gpio.h"
+#include "adc.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+lock_t lock_tt;
 
-/* USER CODE END Includes */
+mode_t control_mode;  
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
 
-/* USER CODE END PTD */
+PidTypeDef ANGLE_Z_PID;
+extern TIM_HandleTypeDef 	htim7; 
+extern TIM_HandleTypeDef 	htim3;
+extern ADC_HandleTypeDef hadc1;
+extern UART_HandleTypeDef huart3;
+extern  uint8_t receive_buff3[7];
+extern hostTypeDef host;
+extern unsigned char gray[12];
+extern unsigned char sur,sul;
+int d_time=0,z_time=0;
+extern unsigned char mode=0,lock=1,detect=0;
+unsigned char OverMess[4]="over";
+int adc_data[4];
 
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-/* USER CODE END PD */
+extern uint8_t gray[12];
+extern uint32_t adcValue[3]; 
 
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
+int16_t my_delay_time = 0;
+uint8_t my_over = 0;
+uint8_t turn_left_flag = 0;
+uint8_t turn_right_flag = 0;
+int16_t error,lasterror;
 
-/* USER CODE END PM */
+void RunVehicle(int speed);
+void TurnVehicleLeft(int speed);
+void TurnVehicleRight(int speed);
 
-/* Private variables ---------------------------------------------------------*/
-
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
+/*底盘初始化*/
+void chassis_init()
+{
+	
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);                            //开启定时器3PWM波输出
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);                            //开启定时器3PWM波输出
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);                            //开启定时器3PWM波输出
+    HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);                            //开启定时器3PWM波输出
+	
+    __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);
+	HAL_UART_Receive_DMA(&huart3, (uint8_t*)receive_buff3, 7); 
+	//HAL_TIM_Base_Start_IT(&htim7); //使能定时器7和定时器7更新中断：TIM_IT_UPDATE  
+	
+}
 
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 
-/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
@@ -66,38 +81,52 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
+	HAL_Init();
 
-  /* USER CODE END 1 */
+	SystemClock_Config();
 
-  /* MCU Configuration--------------------------------------------------------*/
+	MX_GPIO_Init();
+	MX_DMA_Init();
+	MX_USART1_UART_Init();
+	MX_USART3_UART_Init();
+	MX_TIM3_Init();
+	MX_TIM7_Init();
+	/* USER CODE BEGIN 2 */
+	MX_ADC1_Init();
+	MX_ADC_DMA_Init(); 
+	MX_ADC_GPIO_Init();
+	chassis_init();
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	//while(1) printf("%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2]);
+	
 
-  /* USER CODE BEGIN Init */
+	while(host.mode!=VEL_CONTROL_MODE)
+		MotorMove(0,0,0);
 
-  /* USER CODE END Init */
+	while(host.mode==VEL_CONTROL_MODE){
+		MotorMove(host.x*8, host.Raw*8, -host.y*8);
+	}
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	TurnVehicleLeft(500);
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_USART1_UART_Init();
-  MX_USART3_UART_Init();
-  MX_TIM3_Init();
-  MX_TIM7_Init();
-  /* USER CODE BEGIN 2 */
-  MX_ADC1_Init();
-  MX_ADC_DMA_Init(); 
-  MX_ADC_GPIO_Init();
-  chassis_init();
+	while(adcValue[2]<2000)
+    RunVehicle(800);
+		while(adcValue[2]>1500)
+			MotorMove(800,0,0);
+    
+	for(int i=1;i<=12;i++){
+	
+	while(adcValue[2]<1700)
+		RunVehicle(800);
+	while(adcValue[2]>1500)
+		MotorMove(800,0,0);
+	int t=7200000;
+	while(t--)
+		RunVehicle(500);
+	
+	TurnVehicleLeft(500);
+	TurnVehicleRight(500);
+	}
   
   /* USER CODE END 2 */
 //  static uint8_t gray[12];
@@ -154,6 +183,40 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+//800 0.915 8.0
+//300 0.35 4.5
+void RunVehicle(int speed){
+	//double p=(0.00127f)*speed-0.095f,d=(0.0017f)*speed;
+	double p=0.9,d=2.4;
+	int16_t kp=adcValue[0]-adcValue[1]-250;
+	error=kp;
+	int16_t kd=error-lasterror;
+	int16_t pidvalue=p*kp+d*kd;
+	MotorMove(speed,-pidvalue,0);
+	lasterror=error;
+	//printf("%d,%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2],pidvalue); // 打印结果
+}
+
+
+void TurnVehicleLeft(int speed){
+	while(adcValue[1]>1000||adcValue[2]>1500)
+		MotorMove(0,speed,0);
+	while(adcValue[2]<1700)
+		MotorMove(0,speed,0);
+	while(adcValue[1]<1000)
+		MotorMove(0,speed,0);
+
+}
+
+void TurnVehicleRight(int speed){
+	while(adcValue[1]>1000||adcValue[0]>1500)
+		MotorMove(0,-speed,0);
+	while(adcValue[0]<1700)
+		MotorMove(0,-speed,0);
+	while(adcValue[1]<1000)
+		MotorMove(0,-speed,0);
+
+}
 
 /* USER CODE END 4 */
 

@@ -41,7 +41,7 @@ extern "C" {
 #include "pid.h"
 #include "track.h"
 #include "hostpc.h"
-#include "control.h"
+//#include "control.h"
 #include "PCF8591.h"
 #include "adc.h"
 #include "gray.h"
@@ -50,6 +50,25 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 
+/*用来存放运动状态的枚举*/
+typedef enum
+{
+    DISARM = 0,
+    ARM = 1,
+    VEL_CONTROL_MODE = 2,
+    GRAY_MODE = 3,
+    TURN_LEFT_MODE = 4,
+    TURN_RIGHT_MODE = 5
+}mode_t;
+
+
+
+/*用来存放锁定状态的枚举*/
+typedef enum
+{
+    OK = 0,
+    NOT_OK = 1
+}lock_t;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
