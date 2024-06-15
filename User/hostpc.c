@@ -24,7 +24,7 @@ void USER_UART3_IRQHandler(UART_HandleTypeDef *huart)
 {	// 判断是否是串口3
     if(USART3 == huart3.Instance)                                   
     {	// 判断是否是空闲中断
-        if(RESET != __HAL_UART_GET_FLAG(&huart3, UART_FLAG_IDLE))   
+        if(RESET != __HAL_UART_GET_FLAG(&huart3, UART_FLAG_IDLE))    
         {	 // 清除空闲中断标志（否则会一直不断进入中断）
             __HAL_UART_CLEAR_IDLEFLAG(&huart3);                     
             // 调用中断处理函数
@@ -42,10 +42,13 @@ void HAL_UART3_RxCpltCallback(UART_HandleTypeDef *huart)
     // 计算接收到的数据长度
     uint8_t data_length  = 7 - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);   
 
-    //HAL_UART_Transmit(&huart1,receive_buff3,data_length,1);             
+    //HAL_UART_Transmit(&huart1,receive_buff3,data_length,1);          
+		for(int i=0;i<data_length;i++)
+			printf("%d,",receive_buff3[i]);   
     
     if(receive_buff3[0]==0xA5&&receive_buff3[6]==0x5A)
-    { 
+    { 	
+		//printf("\n");
         memcpy(&host,&receive_buff3[1],4);
     }
 	// 清零接收缓冲区

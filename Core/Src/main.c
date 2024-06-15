@@ -98,7 +98,7 @@ int main(void)
 	chassis_init();
 
 	//while(1) printf("%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2]);
-	
+	//while(1) printf("%d,%d,%d,%d\n",host.mode,host.x,host.Raw,host.y);
 
 	while(host.mode!=VEL_CONTROL_MODE)
 		MotorMove(0,0,0);
