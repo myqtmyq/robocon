@@ -24,6 +24,9 @@
 #include "gpio.h"
 #include "adc.h"
 
+#define Tree_nbr 4
+
+
 lock_t lock_tt;
 
 mode_t control_mode;  
@@ -58,6 +61,14 @@ void TurnVehicleRight(int speed);
 
 void SystemClock_Config(void);
 
+RGB_Typedef RGB_Data[100]={	{255,0,0},{255,200,0},{255,250,0},{255,150,0},{255,225,0},
+							{255,175,0},{175,255,0},{225,255,0},{150,255,0},{200,255,0},
+							{0,255,0},{0,255,200},{0,255,150},{0,255,225},{0,175,255},
+							{0,255,175},{0,255,255},{0,225,255},{0,150,255},{0,200,255},
+							{0,0,255},{200,0,225},{150,0,255},{225,0,255},{175,0,255},
+							{255,0,255},{255,0,175},{255,0,225},{255,0,150},{255,0,200}};
+RGB_Queue_Typedef RGB_Queue_Data;
+
 /*底盘初始化*/
 void chassis_init()
 {
@@ -69,11 +80,16 @@ void chassis_init()
 	
     __HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);
 	HAL_UART_Receive_DMA(&huart3, (uint8_t*)receive_buff3, 7); 
-	//HAL_TIM_Base_Start_IT(&htim7); //使能定时器7和定时器7更新中断：TIM_IT_UPDATE  
 	
 }
 
-
+void Delay(int t){
+	int time=t;
+	for(int i=1;i<=7200;i++){
+		time=t;
+		while(time--);
+	}
+}
 
 /**
   * @brief  The application entry point.
@@ -93,47 +109,167 @@ int main(void)
 	MX_TIM7_Init();
 	/* USER CODE BEGIN 2 */
 	MX_ADC1_Init();
-	MX_ADC_DMA_Init(); 
+	MX_ADC_DMA_Init();
+	
 	MX_ADC_GPIO_Init();
 	chassis_init();
+	WB2812_Init();
 
+	/*
+		for(int i=1;i<=10;i++)
+			Update_RGB(&RGB_Data[i],170,0,190);
+		for(int i=11;i<=20;i++)
+			Update_RGB(&RGB_Data[i],255,0,255);
+		for(int i=21;i<=30;i++)
+			Update_RGB(&RGB_Data[i],0,255,255);
+			*/
+			
+//		for(int i=0;i<5;i++)
+//			Update_RGB(&RGB_Data[i],255,51*i,0);
+//		for(int i=5;i<10;i++)
+//			Update_RGB(&RGB_Data[i],255-51*(i-5),255,0);
+//		for(int i=10;i<15;i++)
+//			Update_RGB(&RGB_Data[i],0,255,51*(i-10));
+//		for(int i=15;i<20;i++)
+//			Update_RGB(&RGB_Data[i],0,255-51*(i-15),255);
+//		for(int i=20;i<25;i++)
+//			Update_RGB(&RGB_Data[i],51*(i-20),0,255);
+//		for(int i=25;i<30;i++)
+//			Update_RGB(&RGB_Data[i],255,0,255-51*(i-25));
+
+		
+		RGB_Queue_Init(&RGB_Queue_Data);
+		for(int i=0;i<30;i++)
+			RGB_Queue_Push(&RGB_Queue_Data,RGB_Data[i]);
+			
+		WB2812_Showtime_2(&RGB_Queue_Data);
+		 
+		HAL_TIM_Base_Start_IT(&htim7); //使能定时器7和定时器7更新中断：TIM_IT_UPDATE  
+		// WB2812_Showtime(RGB_Data,30);
+	/*
+		for(int i=1;i<=30;i++)
+			Update_RGB(&RGB_Data[i],0,255,100);
+		for(int i=10;i<=15;i++)
+			Update_RGB(&RGB_Data[i],255,255,255);
+	*/
+	
+	
+	//while(1) MotorMove(host.x*8, host.Raw*8, -host.y*8);
+	//while(1) RunVehicle(750);
 	//while(1) printf("%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2]);
 	//while(1) printf("%d,%d,%d,%d\n",host.mode,host.x,host.Raw,host.y);
-
-	while(host.mode!=VEL_CONTROL_MODE)
+	
+	float t;
+	
+	while(host.mode!=VEL_CONTROL_MODE) 
 		MotorMove(0,0,0);
 
 	while(host.mode==VEL_CONTROL_MODE){
 		MotorMove(host.x*8, host.Raw*8, -host.y*8);
 	}
-
-	TurnVehicleLeft(500);
-
-	while(adcValue[2]<2000)
-    RunVehicle(800);
-		while(adcValue[2]>1500)
-			MotorMove(800,0,0);
-    
-	for(int i=1;i<=12;i++){
 	
-	while(adcValue[2]<1700)
-		RunVehicle(800);
-	while(adcValue[2]>1500)
-		MotorMove(800,0,0);
-	int t=7200000;
+	while(adcValue[2]<2000||adcValue[1]<2000||adcValue[0]<2000)
+		MotorMove(500,0,0);
+	
+	t=1;
+	t*=7200;
 	while(t--)
 		RunVehicle(500);
+
+	TurnVehicleLeft(500);
+
+	while(adcValue[2]<2400)
+		RunVehicle(500);
+	while(adcValue[2]>1500)
+		RunVehicle(500);
+	
+	printf("a");
+		
+	
+	for(int i=1;i<=Tree_nbr;i++){
+	
+		while(adcValue[2]<2400)
+			RunVehicle(500);
+		//int t=1 ;
+		t=1.75;
+		t*=7200;
+		while(t--)
+			RunVehicle(300);
+//		while(adcValue[2]>1500)
+//			RunVehicle(500);
+		
+		MotorMove(0,0,0);
+		Delay(500);
+		
+		TurnVehicleLeft(500);
+		
+		printf("a");
+		
+		while(host.mode!=VEL_CONTROL_MODE)
+			MotorMove(0,0,0);
+
+		while(host.mode==VEL_CONTROL_MODE){
+			MotorMove(host.x*8, host.Raw*8, -host.y*8);
+		}
+		
+		if(i!=Tree_nbr){
+			TurnVehicleRight(500);
+			MotorMove(0,0,0);
+			Delay(300);
+		}
+		
+	}
+	
+	
+	t=1;
+	t*=7200;
+	while(t--)
+		RunVehicle(-500);
 	
 	TurnVehicleLeft(500);
-	TurnVehicleRight(500);
-	}
+	
+	while(adcValue[2]<2300)
+		RunVehicle(500);
+	while(adcValue[2]>1500)
+		RunVehicle(500);
   
+	while(adcValue[2]<2300)
+		RunVehicle(500);
+	//int t=1 ;
+	t=1;
+	t*=7200;
+	while(t--)
+		RunVehicle(500);
+		
+	TurnVehicleRight(500);
+	
+	printf("a");
+	
+	
+	while(host.mode!=VEL_CONTROL_MODE)
+		MotorMove(0,0,0);
+	while(host.mode==VEL_CONTROL_MODE)	
+		MotorMove(host.x*8, host.Raw*8, -host.y*8);
+
+	
+	while(adcValue[2]<2000||adcValue[1]<2000||adcValue[0]<2000)
+		MotorMove(500,0,0);
+	
+	t=1;
+	t*=7200;
+	while(t--)
+		RunVehicle(500);
+
+	TurnVehicleLeft(500);
+	
   /* USER CODE END 2 */
 //  static uint8_t gray[12];
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
+	  
+		MotorMove(0,0,0);
   {
 //     PCF8591T_DATE_NUM(gray);
     /* USER CODE END WHILE */
@@ -185,36 +321,52 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 //800 0.915 8.0
 //300 0.35 4.5
+//500 0.51 6.25
 void RunVehicle(int speed){
-	//double p=(0.00127f)*speed-0.095f,d=(0.0017f)*speed;
-	double p=0.9,d=2.4;
+	//double p=(0.00127f)*speed-0.095f,d=(0.0017f)*speed +4.0f;
+	double p=0.77f,d=1.5f;
 	int16_t kp=adcValue[0]-adcValue[1]-250;
 	error=kp;
 	int16_t kd=error-lasterror;
 	int16_t pidvalue=p*kp+d*kd;
 	MotorMove(speed,-pidvalue,0);
 	lasterror=error;
-	//printf("%d,%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2],pidvalue); // 打印结果
+	//printf("%d,%d,%d,%d\n", adcValue[0], adcValue[1], adcValue[2],d*kd); // 打印结果
 }
 
 
 void TurnVehicleLeft(int speed){
-	while(adcValue[1]>1000||adcValue[2]>1500)
+	MotorMove(0,speed,0);
+	Delay(1000);
+	while(adcValue[2]<2000)
 		MotorMove(0,speed,0);
-	while(adcValue[2]<1700)
-		MotorMove(0,speed,0);
-	while(adcValue[1]<1000)
+	while(adcValue[1]<2000)
 		MotorMove(0,speed,0);
 
 }
 
 void TurnVehicleRight(int speed){
-	while(adcValue[1]>1000||adcValue[0]>1500)
+	MotorMove(0,-speed,0);
+	Delay(1000);
+	while(adcValue[0]<2000)
 		MotorMove(0,-speed,0);
-	while(adcValue[0]<1700)
-		MotorMove(0,-speed,0);
-	while(adcValue[1]<1000)
-		MotorMove(0,-speed,0);
+	//while(adcValue[1]<2000)
+		//MotorMove(0,-speed,0);
+
+}
+
+int count=0;
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+	if(htim==(&htim7)){
+			if(count==30)
+				count=0;
+			RGB_Queue_Push(&RGB_Queue_Data,RGB_Data[count]);
+			RGB_Queue_Pop(&RGB_Queue_Data);
+			
+			WB2812_Showtime_2(&RGB_Queue_Data);
+			count++;
+		
+	}
 
 }
 

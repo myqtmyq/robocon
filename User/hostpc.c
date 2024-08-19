@@ -43,8 +43,8 @@ void HAL_UART3_RxCpltCallback(UART_HandleTypeDef *huart)
     uint8_t data_length  = 7 - __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);   
 
     //HAL_UART_Transmit(&huart1,receive_buff3,data_length,1);          
-		for(int i=0;i<data_length;i++)
-			printf("%d,",receive_buff3[i]);   
+	//for(int i=0;i<data_length;i++)
+	//	printf("%d,",receive_buff3[i]);   
     
     if(receive_buff3[0]==0xA5&&receive_buff3[6]==0x5A)
     { 	
@@ -54,12 +54,14 @@ void HAL_UART3_RxCpltCallback(UART_HandleTypeDef *huart)
 	// 清零接收缓冲区
     memset(receive_buff3,0,data_length);                                            
     data_length = 0;
+	if(host.mode==RESET_MODE)
+		NVIC_SystemReset();
     
     // 重启开始DMA传输 每次255字节数据
     HAL_UART_Receive_DMA(&huart3, (uint8_t*)receive_buff3, 7);                    
 }
 
-
+ 
 
 int ByteToInt(char a)
 {

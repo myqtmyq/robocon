@@ -564,6 +564,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\gray.c</FilePath>
             </File>
+            <File>
+              <FileName>WB2812.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\WB2812.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

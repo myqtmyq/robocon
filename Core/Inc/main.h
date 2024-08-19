@@ -45,6 +45,7 @@ extern "C" {
 #include "PCF8591.h"
 #include "adc.h"
 #include "gray.h"
+#include "WB2812.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -58,7 +59,8 @@ typedef enum
     VEL_CONTROL_MODE = 2,
     GRAY_MODE = 3,
     TURN_LEFT_MODE = 4,
-    TURN_RIGHT_MODE = 5
+    TURN_RIGHT_MODE = 5,
+	RESET_MODE=6
 }mode_t;
 
 
